@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Email Template Generator</title>
+    <style>
+        /* CSS code */
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #output {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Email Template Generator</h1>
+
+    <label for="template">Enter Template (copy and paste): </label>
+    <input type="text" id="template"><br>
+
+    <label for="name">Enter Name (copy and paste): </label>
+    <input type="text" id="name"><br>
+
+    <button onclick="generateEmail()">Generate</button>
+
+    <div id="output"></div>
+
+    <script>
+        // JavaScript code
+        async function callGPTAPI(template, type, model) {
+            // Replace with your own OpenAI API setup if needed
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer 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`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [
+                        {role: 'system', content: type},
+                        {role: 'user', content: template}
+                    ]
+                })
+            });
+
+            const data = await response.json();
+            const message = data.choices[0].message.content;
+            return message;
+        }
+
+        function downloadFile(fileName, text) {
+            const blob = new Blob([text], {type: 'text/plain'});
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = fileName;
+            link.click();
+        }
+
+        function generateEmail() {
+            const template = document.getElementById('template').value;
+            const name = document.getElementById('name').value;
+            const type = 'Write a pitch explaining why this template should be used. Also explain how this template can be used in Outlook and Gmail using the extension provided by cloudHQ (do not explain instructions).';
+            const model = 'gpt-3.5-turbo';
+
+            callGPTAPI(template, type, model).then(pitch => {
+                const outputDiv = document.getElementById('output');
+                outputDiv.innerHTML = `<h2>${name}</h2><p>${pitch}</p>`;
+                
+                // Create a downloadable text file
+                downloadFile(`${name}.txt`, pitch);
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+
+</body>
+</html>
